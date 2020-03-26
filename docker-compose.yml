@@ -3,43 +3,57 @@ version: '3.2'
 services:
   mongodb:
     image: 'bitnami/mongodb:4.2'
+    restart: 'always'
     volumes:
       - './storage/mongodb_data:/bitnami'
-    restart: always
+    networks:
+      - parse-platform
   
   parse:
     image: 'bitnami/parse:4.1.0'
+    restart: 'always'
     ports:
       - '1337:1337'
     volumes:
       - './storage/parse_data:/bitnami'
     depends_on:
       - mongodb
+    networks:
+      - parse-platform
     environment:
-      PARSE_HOST: localhost
+      PARSE_HOST: parse
       PARSE_PORT_NUMBER_NUMBER: 1337
       PARSE_MOUNT_PATH: /parse
       PARSE_APP_ID: PARSELOCAL
       PARSE_MASTER_KEY: MASTERKEYLOCAL
       MONGODB_HOST: mongodb
       MONGODB_PORT_NUMBER: 27017
-    restart: always
   
   parse-dashboard:
     image: 'bitnami/parse-dashboard:2.0.5'
+    restart: 'always'
     ports:
       - '4040:4040'
     volumes:
       - './storage/parse_dashboard_data:/bitnami'
+      - './parse-dashboard:/botnami'
     depends_on:
       - parse
+    networks:
+      - parse-platform
     environment:
       PARSE_DASHBOARD_USER: admin
       PARSE_DASHBOARD_PASSWORD: admin
       PARSE_HOST: localhost
       PARSE_PROTOCOL: http
+      PARSE_USE_HOSTNAME: 'yes'
       PARSE_PORT_NUMBER: 1337
       PARSE_APP_ID: PARSELOCAL
       PARSE_MASTER_KEY: MASTERKEYLOCAL
       PARSE_DASHBOARD_APP_NAME: ParseLocalDashboard
-    restart: always
+
+networks:
+  parse-platform:
+    external:
+      name: parse-platform
+    
